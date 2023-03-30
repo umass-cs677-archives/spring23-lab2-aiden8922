@@ -27,16 +27,13 @@ public:
         catalog_serv_addr.sin_port = htons(catalog_serv_port);
         catalog_serv_addr.sin_addr.s_addr = inet_addr(catalog_serv_ip.c_str());
 		//the log file has historical order no stored in the first line, and then stores all the transaction data line by line, with space as delimitnator 
-        file.open(order_log_file,std::ios_base::in);
+        file.open(order_log_file);
 		if(!file.is_open()){
 			std::cout<<"read file error";
 			throw;
 		}
 		file>>next_order_no; //read the historical order no because we need to increment based on that number
-		file.close();//close the read handler to free the read buffer and other stuff, because in the upcoming write operation we dont need them.
-
-		file.open(order_log_file,std::ios_base::out);
-		file.seekp(std::ios_base::end);    //we need append our new transaction data in the end of file
+		file.seekp(0, std::ios_base::end);//set the write position to the end of file.
     }
 	static void DeInit(){
 		file.seekp(std::ios_base::beg);
@@ -65,7 +62,8 @@ public:
 		//the reply is a text string built from converting each fields of data to string and concatenate them with space as seperater 
 		//the first field is always a state code, with -100 representing invaild command,-200 means cannot connect to the catalog server,other return code are
 		//subjected to specific operation
-		char reply[128] = "-100"; //set default code as -100
+		char reply[128]; 
+		memset((void*)reply,'\0',sizeof(reply));
 		int socket_to_catalog_server;
 		if(arg_list[0] == "trade"){
 			if ((socket_to_catalog_server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -88,6 +86,8 @@ public:
 			}
 
 			close(socket_to_catalog_server);
+		}else{
+			memcpy((void*)reply,(const void*)"-100",5);
 		}
 
 		send(socket_to_front, reply, strlen(reply), 0);

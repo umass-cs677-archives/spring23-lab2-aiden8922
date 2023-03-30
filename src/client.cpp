@@ -47,7 +47,7 @@ int main(int argc, char const* argv[])
         auto stop= std::chrono::high_resolution_clock::now();
         close(client_fd);
         printf("thread%d receives:%s time taken:%ld\n",pid, buffer,std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
-        
+        return 0;
     }
 
 }
