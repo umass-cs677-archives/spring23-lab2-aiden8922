@@ -3,6 +3,8 @@
 #include<string>
 #include<mutex>
 #include<shared_mutex>
+#define DEBUG(x) ((std::cout<<x).flush())
+#define ABS(x) ((x)>0? (x):-(x))
 struct StockInfo{ 
 	std::string name;
 	unsigned price;
@@ -34,10 +36,10 @@ class StockInventory {
 		}
 		int TradeStocks(int num){
 			std::unique_lock lock(per_stock_lock); //acquire write lock
-			if(num>stock_info.stock_remaining){
+			if(num>(int)stock_info.stock_remaining){
 				return -3;                                    //represents not enough stocks remaining
 			}
-			if((unsigned)num+stock_info.trade_num>stock_info.trade_num_limit){
+			if(ABS(num)+stock_info.trade_num>stock_info.trade_num_limit){
 				return -2;                                    //represents the operation is to cause trade num limit to be exceed
 			}
 			stock_info.stock_remaining-=num;

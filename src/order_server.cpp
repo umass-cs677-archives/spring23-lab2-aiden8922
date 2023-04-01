@@ -80,7 +80,9 @@ public:
 					//if the trade operation success
 					{
 						std::unique_lock<std::mutex> lock(mutex);
-						file<<next_order_no++<<" "<<arg_list[1]<<" "<<arg_list[2]<<std::endl; //log transaction to the file
+						file<<next_order_no<<" "<<arg_list[1]<<" "<<arg_list[2]<<std::endl; //log transaction to the file
+						sprintf(reply,"%llu",next_order_no); //send the order no back if transaction is successful
+						next_order_no++;
 					}
 				}
 			}
