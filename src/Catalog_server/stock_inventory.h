@@ -43,7 +43,7 @@ class StockInventory {
 				return -2;                                    //represents the operation is to cause trade num limit to be exceed
 			}
 			stock_info.stock_remaining-=num;
-			stock_info.trade_num+=(unsigned)num;
+			stock_info.trade_num+=ABS(num);
 			return 1;
 		}
 	};

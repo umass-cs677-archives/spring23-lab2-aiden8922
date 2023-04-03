@@ -3,7 +3,7 @@ from socketserver import ThreadingMixIn
 # Import socket module
 import socket            
 import json
-
+import threading
 # Define ip and ports
 catalog_ip="192.168.85.128"
 catalog_port=8080
@@ -14,67 +14,69 @@ order_port=8081
 class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
+        print(threading.currentThread().getName())
         s = socket.socket()        
         # connect to the catalog server
         s.connect((catalog_ip,catalog_port))
-        #print(b"lookup "+self.path[1:])
-        s.send(("lookup "+self.path[1:]).encode())
+        s.send(("lookup "+self.path[1:]).encode())#the stock name can be obtained from self.path
         # receive data from the server and decoding to get the string.
         reply=s.recv(1024).decode();
         # close the connection
         s.close()
+        #the reply string consists of status code of the operation, along with fields of the corresponding stock, seperated by space
         reply=reply.split(" ") 
-        print(reply)
-        if reply[0] > '0':
+        status_code=(int)(reply[0])
+        if status_code > 0:
             reply_json={
                 "data": {
                     "name": reply[1],
                     "price": reply[2],
                     "quantity": reply[4],
+                    "current trade volume": reply[3],
+                    "trade volume limit": reply[5]
                 }
             }
         else:
+            err_msg={-100:"invaild command",-1:"stock not exists"}
             reply_json={
                 "error": {
-                    "code": reply[0],
-                    "message": "stock not found"
+                    "code": status_code,
+                    "message": err_msg[status_code]
                 }
             }
         self.send_response(200)
         self.end_headers()
         self.wfile.write(str(reply_json).encode())
     def do_POST(self):
-        
+        print(threading.currentThread().getName())
         content_len = int(self.headers.get('Content-Length'))
-        post_body = self.rfile.read(content_len)
-        print(post_body)
+        post_body = self.rfile.read(content_len)#get the body of the request
         json_arg=json.loads(post_body)  #convert json string to python dictionary
 
         s = socket.socket()        
         # connect to the catalog server
         s.connect((order_ip,order_port))
-        #print(b"lookup "+self.path[1:])
         quantity=json_arg["quantity"] 
         if json_arg["type"] == "sell":
             quantity=-quantity
         s.send(("trade "+json_arg["name"]+" "+str(quantity)).encode())
-        print(("trade "+json_arg["name"]+" "+str(quantity)).encode())
         # receive data from the server and decoding to get the string.
         reply=int(s.recv(1024).decode())
         # close the connection
         s.close()
-
-        if reply > 0:
+        #the reply for trade operation is a single status code 
+        if reply >= 0:#transaction number(an unsigned number start from 0) will be returned if the action is successful, 
             reply_json={
                 "data": {
                     "transaction_number": reply
                 }
             }
         else:
+            err_msg={-200:"cant connect to the catalog server",-100:"invaild command",-3:"not enough stock remaining", -2:"trade volume reaches upper bound",-1:"stock not exists"}
             reply_json={
                 "error": {
                     "code": reply,
-                    "message": "stock not found"
+                    "message": err_msg[reply]
                 }
             }
         self.send_response(200)

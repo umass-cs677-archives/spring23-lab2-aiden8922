@@ -1,6 +1,6 @@
 #include<iostream>
 #include"stock_inventory.h"
-#include"server.h"
+#include"../include/server.h"
 #include<vector>
 #include<fstream>
 #include<sstream>
@@ -39,7 +39,7 @@ public:
 		if (arg_list[0] == "lookup") {
 			if (arg_list.size() > 1) {
 				auto res = p->LookUp(arg_list[1]);
-				sprintf(reply,"%d %s %u %u %u %u",res.first,res.second.name.c_str(),res.second.price,res.second.stock_remaining,res.second.trade_num,res.second.trade_num_limit);
+				sprintf(reply,"%d %s %u %u %u %u",res.first,res.second.name.c_str(),res.second.price,res.second.trade_num,res.second.stock_remaining,res.second.trade_num_limit);
 			}
 		}else if(arg_list[0] == "trade"){
 			if(arg_list.size() >2){

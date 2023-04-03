@@ -19,7 +19,7 @@ int main(int argc, char const* argv[])
 {
     
     struct sockaddr_in serv_addr;
-    const char* request = "trade AidenCo 10";
+    const char* request = "trade BobCo 1";
     char buffer[1024] = { 0 };
 
     signal(SIGINT,signal_handler);
@@ -30,7 +30,7 @@ int main(int argc, char const* argv[])
 
   
     int pid=getpid();
-    while(1){
+    for(;;){
 
         if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             printf("\n Socket creation error \n");
@@ -47,7 +47,7 @@ int main(int argc, char const* argv[])
         auto stop= std::chrono::high_resolution_clock::now();
         close(client_fd);
         printf("thread%d receives:%s time taken:%ld\n",pid, buffer,std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count());
-        return 0;
+        
     }
 
 }
