@@ -4,10 +4,15 @@ from socketserver import ThreadingMixIn
 import socket            
 import json
 import threading
+import os
 # Define ip and ports
-catalog_ip="192.168.85.128"
+catalog_ip = os.getenv("CATALOG_SERVER")
+if not catalog_ip:
+    catalog_ip=socket.gethostbyname("catalog_server")
 catalog_port=8080
-order_ip="192.168.85.128"
+order_ip = os.getenv("ORDER_SERVER")
+if not order_ip:
+    order_ip=socket.gethostbyname("order_server")
 order_port=8081
 
 

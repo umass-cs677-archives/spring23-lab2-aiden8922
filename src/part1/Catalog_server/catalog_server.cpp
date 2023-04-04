@@ -106,6 +106,6 @@ public:
 
 
 int main() {
-	CatalogServer server("catalog.txt");
-	server.Start("192.168.85.128",8080,10);
+	CatalogServer server("data/catalog.txt");
+	server.Start("0.0.0.0",8080,10);
 }

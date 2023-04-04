@@ -10,6 +10,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <memory.h>
+#define _BSD_SOURCE
+#include <netdb.h>
 
 class Job {
 //function objects that will be put into the queue of the thread_pool
@@ -22,10 +24,20 @@ private:
     
     int socket_to_front;//member variable of each Job object
 public:
-	static void InitJob(std::string catalog_serv_ip, unsigned catalog_serv_port, std::string order_log_file){
+	static void InitJob(std::string catalog_serv_ip, unsigned catalog_serv_port, std::string order_log_file, bool using_hostname = 0){
         catalog_serv_addr.sin_family = AF_INET;
         catalog_serv_addr.sin_port = htons(catalog_serv_port);
-        catalog_serv_addr.sin_addr.s_addr = inet_addr(catalog_serv_ip.c_str());
+		if(!using_hostname){
+        	catalog_serv_addr.sin_addr.s_addr = inet_addr(catalog_serv_ip.c_str());
+		}else{
+			struct hostent *host;
+			if ((host = gethostbyname(catalog_serv_ip.c_str())) == NULL)
+			{
+				perror("hostname resolution failed");
+				exit(EXIT_FAILURE);
+			}
+			catalog_serv_addr.sin_addr.s_addr = *(long *)(host->h_addr_list[0]);
+		}
 		//the log file has historical order no stored in the first line, and then stores all the transaction data line by line, with space as delimitnator 
         file.open(order_log_file);
 		if(!file.is_open()){
@@ -108,9 +120,9 @@ private:
 		return Job(socket);
 	}
 public:
-	OrderServer(const std::string catalog_serv_ip, const unsigned catalog_serv_port,const std::string log_file){
+	OrderServer(const std::string catalog_serv_ip, const unsigned catalog_serv_port,const std::string log_file, bool using_hostname = 0){
 		//the parent class constructor will be called implicitly
-		Job::InitJob(catalog_serv_ip,catalog_serv_port,log_file);
+		Job::InitJob(catalog_serv_ip,catalog_serv_port,log_file,using_hostname);
 	}
 	void Stop(){
 		Server<Job>::Stop();//must be called first because we need to stop the thread pool and make sure no more new transaction will be made before we write the order no
@@ -120,6 +132,13 @@ public:
 };
 
 int main(){
-	OrderServer server("192.168.85.128",8080,"order_log.txt");
-	server.Start("192.168.85.128",8081,10);
+	char* ip=getenv("CATALOG_SERVER");
+	if(!ip){//if env is not set, then use hostname, usually inside a docker container
+		OrderServer server("catalog_server",8080,"data/order_log.txt",1);
+		server.Start("0.0.0.0",8081,10);
+	}else{
+		OrderServer server(ip,8080,"data/order_log.txt");
+		server.Start("0.0.0.0",8081,10);
+	}   
+	
 }

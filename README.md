@@ -6,6 +6,18 @@ Spring 2023
 
 # Lab 2: Asterix and the Microservice Stock Bazaar
 
+## How to run
+
+for part1:
+export the ip address of the machine on which catalog server and order server will be run using
+    export CATALOG_SERVER="X.X.X.X"
+    export ORDER_SERVER="Y.Y.Y.Y"
+configure the catalog.txt file in the Catalog_server/data folder as needed, dont touch the order_log.txt
+run the executable in the corresponding XXX_server folder
+using ctrl^c or kill -2 to terminate the server correctly
+
+for part2:
+just run docker-compose up
 
 ## Goals and Learning Outcomes
 
