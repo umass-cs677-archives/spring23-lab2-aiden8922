@@ -1,3 +1,4 @@
+//this program is used to send requests directly to the order server using sockets, and thus skipping the frontend
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
