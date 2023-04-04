@@ -1,0 +1,34 @@
+the catalog server and order server are implemented using c++
+they have common behavior, such as 
+1 socket setup and listening,requesting accepting,
+2 generating Job based on the request and pushing job into the threadpool,
+3 signal handlering, thread termination, socket closing
+
+therefore we implemented an abstract base class which contain a threadpool member,
+it defines public virtual methods like constructor(init), start, and stop, and put the above common operations 
+into those methods, the derived class can overwrite those methods, call the parent method inside, and insert codes for
+any other operations as needed. there is one function:
+    private:
+        virtual Job BuildJob(int incoming_socket)=0;
+must be implement by every derived class, this mothed will be call every time
+a new connection is received, and it should generate a Job and have it returned so that it can be pushed into the queue of threadpool
+what type the Job should be is up for the derive class to decide: As an template parameter
+it only needs to satisfy the following assumption
+    Job();
+
+CatalogServer and OrderServer are both the derive class of Server, inside the corresponding .cpp file, the corresponding Job class are also defined
+
+CatalogServer also uses StockInventory inside, which is define in stock_inventory.h. Different from lab1, it now uses read-write lock to increase performance(requires -std=c++17 as an build option)
+
+the frontend server are implemented using python, it accept http requests from the clients and send cmd string directly through socket to the order server or catalog server. 
+
+
+the communication format between servers and between servers and clients are defined as follow:
+1 client send http request with to frontend server, the frontend server send http reply back, formats are defined in the top level readme
+2 the communication between servers are through socket, both requests and replys are text string, with fields seperated by space 
+trade requests are send as "trade stockname number", number can be negative. the reply is string just contains an integer with positive number being the transaction
+ID of that transaction, negative -1 means stock doesnt exist, -2 means the transaction will exceeds the trade volume limit, -3 means not enough stock remaining.
+lookup requests are sent as "lookup stockname", and reply are like "status_code stock_name stock_price curent_trade_volume curent_stock_remaining trade_volume_limit"
+the status code would be 1 if the lookup succeeds, and would be negative in case like stock doesnt exists, in this case, only the status code will be returned
+
+
